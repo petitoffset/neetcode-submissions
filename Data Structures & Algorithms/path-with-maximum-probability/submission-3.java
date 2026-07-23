@@ -1,0 +1,56 @@
+class Solution {
+    class State {
+        double prob;
+        int node;
+
+        public State(double prob, int node) {
+            this.prob = prob;
+            this.node = node;
+        }
+    }
+
+    public double maxProbability(
+        int n, int[][] edges, double[] succProb, int start_node, int end_node) {
+        // create adj list
+        Map<Integer, List<State>> adj = new HashMap<>();
+        for (int i = 0; i < edges.length; i++) {
+            adj.computeIfAbsent(edges[i][0], key -> new ArrayList<>())
+                .add(new State(succProb[i], edges[i][1]));
+            adj.computeIfAbsent(edges[i][1], key -> new ArrayList<>())
+                .add(new State(succProb[i], edges[i][0]));
+        }
+
+        Queue<State> maxHeap =
+            new PriorityQueue<State>((n1, n2) -> Double.compare(n2.prob, n1.prob));
+        Set<Integer> visited = new HashSet<>();
+        maxHeap.add(new State(1, start_node));
+
+        double[] maxProb = new double[n];
+        maxProb[start_node] = 1.0;
+
+        while (!maxHeap.isEmpty()) {
+            State cur = maxHeap.remove();
+            double prob1 = cur.prob;
+            int n1 = cur.node;
+            if (visited.contains(n1)) {
+                continue;
+            }
+            visited.add(n1);
+            if (n1 == end_node) {
+                return prob1;
+            }
+            if (adj.containsKey(n1)) {
+                for (State next : adj.get(n1)) {
+                    double prob2 = next.prob;
+                    int n2 = next.node;
+                    double newProb = prob1 * prob2;
+                    if (newProb > maxProb[n2]) {
+                        maxProb[n2] = newProb;
+                        maxHeap.add(new State(newProb, n2));
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+}
